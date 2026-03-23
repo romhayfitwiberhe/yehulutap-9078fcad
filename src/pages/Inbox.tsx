@@ -1,12 +1,14 @@
 import { Search, Edit } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Inbox = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["inbox-conversations", user?.id],
@@ -28,7 +30,6 @@ const Inbox = () => {
 
       if (!convos) return [];
 
-      // Get other participants
       const { data: allParticipants } = await supabase
         .from("conversation_participants")
         .select("conversation_id, user_id")
@@ -36,12 +37,16 @@ const Inbox = () => {
         .neq("user_id", user.id);
 
       const otherUserIds = [...new Set((allParticipants || []).map((p) => p.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url, online_at")
-        .in("user_id", otherUserIds);
+      let profiles: any[] = [];
+      if (otherUserIds.length > 0) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("user_id, username, display_name, avatar_url, online_at")
+          .in("user_id", otherUserIds);
+        profiles = p || [];
+      }
 
-      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+      const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]));
       const convoParticipantMap = new Map<string, string>();
       (allParticipants || []).forEach((p) => {
         convoParticipantMap.set(p.conversation_id, p.user_id);
@@ -64,6 +69,22 @@ const Inbox = () => {
     enabled: !!user,
     staleTime: 15000,
   });
+
+  // Realtime for inbox updates
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("inbox-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversations" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["inbox-conversations"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   if (!user) {
     return (
@@ -101,7 +122,11 @@ const Inbox = () => {
       ) : (
         <div>
           {conversations.map((chat) => (
-            <button key={chat.id} className="flex items-center gap-3 w-full px-4 py-3 hover:bg-card/50 transition-colors">
+            <button
+              key={chat.id}
+              onClick={() => navigate(`/chat/${chat.id}`)}
+              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-card/50 transition-colors"
+            >
               <div className="relative">
                 <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center text-muted-foreground font-semibold overflow-hidden">
                   {chat.avatar_url ? (
