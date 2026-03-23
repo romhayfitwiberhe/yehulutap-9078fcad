@@ -28,19 +28,22 @@ export const useComments = (postId: string | null) => {
         .is("parent_id", null)
         .order("created_at", { ascending: false })
         .limit(100);
-
       if (error) throw error;
 
       const userIds = [...new Set((data || []).map((c) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url")
-        .in("user_id", userIds);
-
-      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("user_id, username, display_name, avatar_url")
+          .in("user_id", userIds);
+        profiles = p || [];
+      }
+      const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]));
 
       return (data || []).map((c) => ({
         ...c,
+        created_at: c.created_at ?? new Date().toISOString(),
         likes_count: c.likes_count ?? 0,
         profile: profileMap.get(c.user_id) ?? null,
       }));

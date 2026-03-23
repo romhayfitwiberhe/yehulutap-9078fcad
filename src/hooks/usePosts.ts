@@ -21,43 +21,43 @@ export interface PostWithProfile {
   } | null;
 }
 
+const mapPosts = (data: any[], profiles: any[]): PostWithProfile[] => {
+  const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]));
+  return data.map((post) => ({
+    ...post,
+    created_at: post.created_at ?? new Date().toISOString(),
+    likes_count: post.likes_count ?? 0,
+    comments_count: post.comments_count ?? 0,
+    shares_count: post.shares_count ?? 0,
+    views_count: post.views_count ?? 0,
+    profile: profileMap.get(post.user_id) ?? null,
+  }));
+};
+
+const fetchProfiles = async (userIds: string[]) => {
+  if (userIds.length === 0) return [];
+  const { data } = await supabase
+    .from("profiles")
+    .select("user_id, username, display_name, avatar_url, verification_type")
+    .in("user_id", userIds);
+  return data || [];
+};
+
 export const usePosts = () => {
   return useQuery({
     queryKey: ["posts-feed"],
     queryFn: async (): Promise<PostWithProfile[]> => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          id, caption, media_urls, thumbnail_url, type,
-          likes_count, comments_count, shares_count, views_count,
-          created_at, user_id
-        `)
+        .select("id, caption, media_urls, thumbnail_url, type, likes_count, comments_count, shares_count, views_count, created_at, user_id")
         .eq("is_draft", false)
         .eq("audience", "public")
         .order("created_at", { ascending: false })
         .limit(50);
-
       if (error) throw error;
-
-      // Fetch profiles for all unique user_ids
       const userIds = [...new Set((data || []).map((p) => p.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url, verification_type")
-        .in("user_id", userIds);
-
-      const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
-      );
-
-      return (data || []).map((post) => ({
-        ...post,
-        likes_count: post.likes_count ?? 0,
-        comments_count: post.comments_count ?? 0,
-        shares_count: post.shares_count ?? 0,
-        views_count: post.views_count ?? 0,
-        profile: profileMap.get(post.user_id) ?? null,
-      }));
+      const profiles = await fetchProfiles(userIds);
+      return mapPosts(data || [], profiles);
     },
     staleTime: 30000,
   });
@@ -69,37 +69,16 @@ export const useVideoPosts = () => {
     queryFn: async (): Promise<PostWithProfile[]> => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          id, caption, media_urls, thumbnail_url, type,
-          likes_count, comments_count, shares_count, views_count,
-          created_at, user_id
-        `)
+        .select("id, caption, media_urls, thumbnail_url, type, likes_count, comments_count, shares_count, views_count, created_at, user_id")
         .eq("is_draft", false)
         .eq("audience", "public")
         .eq("type", "video")
         .order("created_at", { ascending: false })
         .limit(50);
-
       if (error) throw error;
-
       const userIds = [...new Set((data || []).map((p) => p.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url, verification_type")
-        .in("user_id", userIds);
-
-      const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
-      );
-
-      return (data || []).map((post) => ({
-        ...post,
-        likes_count: post.likes_count ?? 0,
-        comments_count: post.comments_count ?? 0,
-        shares_count: post.shares_count ?? 0,
-        views_count: post.views_count ?? 0,
-        profile: profileMap.get(post.user_id) ?? null,
-      }));
+      const profiles = await fetchProfiles(userIds);
+      return mapPosts(data || [], profiles);
     },
     staleTime: 30000,
   });
