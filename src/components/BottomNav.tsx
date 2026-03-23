@@ -9,12 +9,16 @@ const tabs = [
   { path: "/profile", icon: User, label: "Profile" },
 ];
 
+const hiddenPaths = ["/videos", "/login", "/signup"];
+
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isVideosPage = location.pathname === "/videos";
 
-  if (isVideosPage) return null;
+  // Hide on certain pages and chat
+  if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith("/chat/")) {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
