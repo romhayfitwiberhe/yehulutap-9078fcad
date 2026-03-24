@@ -152,6 +152,7 @@ const Inbox = () => {
           ))}
         </div>
       )}
+      <NewDMSheet isOpen={showNewDM} onClose={() => setShowNewDM(false)} />
     </div>
   );
 };
