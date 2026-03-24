@@ -10,6 +10,7 @@ const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"videos" | "saved" | "liked" | "private">("videos");
+  const [followSheet, setFollowSheet] = useState<{ open: boolean; tab: "followers" | "following" }>({ open: false, tab: "followers" });
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
