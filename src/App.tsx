@@ -12,6 +12,8 @@ import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
+import UserProfile from "./pages/UserProfile";
+import Settings from "./pages/Settings";
 import BottomNav from "./components/BottomNav";
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/user/:userId" element={<UserProfile />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
       <BottomNav />
     </AuthProvider>
