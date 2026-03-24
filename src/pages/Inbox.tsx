@@ -1,4 +1,4 @@
-import { Search, ArrowLeft, UserPlus } from "lucide-react";
+import { Search, ArrowLeft, UserPlus, MessageSquare, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
