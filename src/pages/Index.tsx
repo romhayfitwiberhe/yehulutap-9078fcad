@@ -1,4 +1,4 @@
-import { Search, Bell, PlusSquare } from "lucide-react";
+import { Heart, MessageCircle, Send } from "lucide-react";
 import StoriesBar from "@/components/home/StoriesBar";
 import PostCard from "@/components/home/PostCard";
 import CommentDrawer from "@/components/CommentDrawer";
@@ -22,22 +22,25 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background pb-28">
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-[52px] bg-background border-b border-border" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-lg">Y</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/explore")}>
-            <Search className="w-6 h-6 text-foreground" />
-          </button>
-          <button onClick={() => navigate("/upload")}>
-            <PlusSquare className="w-6 h-6 text-foreground" />
-          </button>
+    <div className="min-h-[100dvh] bg-background pb-16">
+      {/* Instagram-style header */}
+      <header
+        className="sticky top-0 z-40 flex items-center justify-between px-4 h-[44px] bg-background border-b border-border"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <span className="text-[22px] font-bold text-foreground tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+          YehuluTap
+        </span>
+        <div className="flex items-center gap-5">
           {user ? (
-            <button onClick={() => navigate("/notifications")} className="relative">
-              <Bell className="w-6 h-6 text-primary" />
-            </button>
+            <>
+              <button onClick={() => navigate("/notifications")} className="relative">
+                <Heart className="w-[26px] h-[26px] text-foreground" strokeWidth={1.8} />
+              </button>
+              <button onClick={() => navigate("/inbox")} className="relative">
+                <Send className="w-[24px] h-[24px] text-foreground -rotate-12" strokeWidth={1.8} />
+              </button>
+            </>
           ) : (
             <button onClick={() => navigate("/login")} className="text-sm font-semibold text-primary">
               Sign In
@@ -49,12 +52,16 @@ const Index = () => {
       <StoriesBar />
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex justify-center py-16">
+          <div className="w-7 h-7 border-2 border-muted-foreground border-t-foreground rounded-full animate-spin" />
         </div>
       ) : posts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-          <p className="text-muted-foreground text-sm">No posts yet. Be the first to share!</p>
+        <div className="flex flex-col items-center justify-center py-24 px-8 text-center gap-3">
+          <div className="w-16 h-16 rounded-full border-2 border-muted-foreground flex items-center justify-center">
+            <MessageCircle className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-foreground font-semibold text-base">No posts yet</p>
+          <p className="text-muted-foreground text-sm">Be the first to share something!</p>
         </div>
       ) : (
         <div>
