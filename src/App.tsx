@@ -9,6 +9,9 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
+import Notifications from "./pages/Notifications";
+import Explore from "./pages/Explore";
+import EditProfile from "./pages/EditProfile";
 import BottomNav from "./components/BottomNav";
 
 function App() {
@@ -24,6 +27,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/chat/:conversationId" element={<Chat />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>
       <BottomNav />
     </AuthProvider>

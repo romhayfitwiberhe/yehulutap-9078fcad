@@ -26,9 +26,9 @@ const Index = () => {
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-[52px] bg-background border-b border-border" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <h1 className="text-xl font-bold text-foreground tracking-tight">YehuluTap</h1>
         <div className="flex items-center gap-4">
-          <button><Search className="w-6 h-6 text-primary" /></button>
+          <button onClick={() => navigate("/explore")}><Search className="w-6 h-6 text-primary" /></button>
           {user ? (
-            <button className="relative">
+            <button onClick={() => navigate("/notifications")} className="relative">
               <Heart className="w-6 h-6 text-primary" />
             </button>
           ) : (

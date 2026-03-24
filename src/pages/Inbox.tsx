@@ -3,12 +3,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import NewDMSheet from "@/components/NewDMSheet";
 
 const Inbox = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showNewDM, setShowNewDM] = useState(false);
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["inbox-conversations", user?.id],
@@ -103,7 +105,7 @@ const Inbox = () => {
     <div className="min-h-[100dvh] bg-background pb-28">
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-[52px] bg-background border-b border-border" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <h1 className="text-lg font-bold text-foreground">Messages</h1>
-        <button><Edit className="w-5 h-5 text-primary" /></button>
+        <button onClick={() => setShowNewDM(true)}><Edit className="w-5 h-5 text-primary" /></button>
       </header>
 
       <div className="px-4 py-2">
@@ -150,6 +152,7 @@ const Inbox = () => {
           ))}
         </div>
       )}
+      <NewDMSheet isOpen={showNewDM} onClose={() => setShowNewDM(false)} />
     </div>
   );
 };
