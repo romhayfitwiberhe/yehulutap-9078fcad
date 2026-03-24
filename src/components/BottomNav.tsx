@@ -1,11 +1,11 @@
-import { Home, Search, PlusSquare, MessageCircle, User } from "lucide-react";
+import { Home, Play, Plus, MessageSquare, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
   { path: "/", icon: Home, label: "Home" },
-  { path: "/explore", icon: Search, label: "Explore" },
-  { path: "/upload", icon: PlusSquare, label: "" },
-  { path: "/inbox", icon: MessageCircle, label: "Inbox" },
+  { path: "/videos", icon: Play, label: "Videos" },
+  { path: "/upload", icon: Plus, label: "" },
+  { path: "/inbox", icon: MessageSquare, label: "Inbox" },
   { path: "/profile", icon: User, label: "Profile" },
 ];
 
@@ -15,7 +15,7 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith("/chat/")) {
+  if (hiddenPaths.some(p => location.pathname === p || location.pathname.startsWith("/chat/") || location.pathname.startsWith("/settings/"))) {
     return null;
   }
 
@@ -28,17 +28,17 @@ const BottomNav = () => {
 
           if (isCreate) {
             return (
-              <button key={tab.path} onClick={() => navigate(tab.path)} className="flex items-center justify-center w-11 h-8 bg-primary rounded-lg">
-                <PlusSquare className="w-5 h-5 text-primary-foreground" />
+              <button key={tab.path} onClick={() => navigate(tab.path)} className="flex items-center justify-center w-12 h-9 bg-primary rounded-lg">
+                <Plus className="w-6 h-6 text-primary-foreground" />
               </button>
             );
           }
 
           return (
             <button key={tab.path} onClick={() => navigate(tab.path)} className="flex flex-col items-center justify-center gap-0.5 min-w-[48px]">
-              <tab.icon className={`w-6 h-6 ${isActive ? "text-foreground" : "text-muted-foreground"}`} fill={isActive ? "currentColor" : "none"} />
+              <tab.icon className={`w-6 h-6 ${isActive ? "text-primary" : "text-muted-foreground"}`} fill={isActive && tab.path !== "/upload" ? "currentColor" : "none"} />
               {tab.label && (
-                <span className={`text-[10px] ${isActive ? "text-foreground font-medium" : "text-muted-foreground"}`}>{tab.label}</span>
+                <span className={`text-[10px] ${isActive ? "text-primary font-medium" : "text-muted-foreground"}`}>{tab.label}</span>
               )}
             </button>
           );

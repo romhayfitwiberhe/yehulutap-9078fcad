@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera, ChevronRight, ChevronDown, Link as LinkIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,26 +26,21 @@ const EditProfile = () => {
 
   const [form, setForm] = useState<Record<string, string>>({});
 
-  // Initialize form once profile loads
-  const displayName = form.display_name ?? profile?.display_name ?? "";
-  const username = form.username ?? profile?.username ?? "";
-  const bio = form.bio ?? profile?.bio ?? "";
-  const website = form.website ?? profile?.website ?? "";
+  const getValue = (key: string) => form[key] ?? (profile as any)?.[key] ?? "";
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     try {
       const compressed = await compressImage(file, 400);
-      const ext = "jpg";
-      const path = `avatars/${user.id}_${Date.now()}.${ext}`;
+      const path = `avatars/${user.id}_${Date.now()}.jpg`;
       const { error: uploadError } = await supabase.storage.from("media").upload(path, compressed);
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
       queryClient.invalidateQueries({ queryKey: ["my-profile"] });
       toast.success("Avatar updated");
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to update avatar");
     }
   };
@@ -54,11 +49,11 @@ const EditProfile = () => {
     if (!user || saving) return;
     setSaving(true);
     try {
-      const updates: Record<string, string> = {};
-      if (form.display_name !== undefined) updates.display_name = form.display_name;
-      if (form.username !== undefined) updates.username = form.username;
-      if (form.bio !== undefined) updates.bio = form.bio;
-      if (form.website !== undefined) updates.website = form.website;
+      const updates: Record<string, any> = {};
+      const fields = ["display_name", "username", "bio", "gender", "website", "contact_phone", "birthday"];
+      fields.forEach((key) => {
+        if (form[key] !== undefined) updates[key] = form[key];
+      });
 
       if (Object.keys(updates).length === 0) {
         navigate(-1 as any);
@@ -77,10 +72,24 @@ const EditProfile = () => {
     }
   };
 
+  const handlePasswordUpdate = async () => {
+    const newPass = form.new_password;
+    const confirmPass = form.confirm_password;
+    if (!newPass || newPass.length < 6) return toast.error("Password must be at least 6 characters");
+    if (newPass !== confirmPass) return toast.error("Passwords do not match");
+    
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) return toast.error(error.message);
+    toast.success("Password updated");
+    setForm(prev => ({ ...prev, new_password: "", confirm_password: "" }));
+  };
+
   if (!user) {
     navigate("/login");
     return null;
   }
+
+  const gender = getValue("gender");
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -89,7 +98,7 @@ const EditProfile = () => {
           <ArrowLeft className="w-6 h-6 text-foreground" />
         </button>
         <span className="text-base font-bold text-foreground">Edit Profile</span>
-        <button onClick={handleSave} disabled={saving} className="text-sm font-semibold text-primary disabled:opacity-50">
+        <button onClick={handleSave} disabled={saving} className="px-4 py-1 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">
           {saving ? "..." : "Save"}
         </button>
       </header>
@@ -99,55 +108,172 @@ const EditProfile = () => {
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5">
           {/* Avatar */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-card flex items-center justify-center text-3xl font-bold text-muted-foreground border-2 border-border overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  (profile?.username ?? "U").charAt(0).toUpperCase()
-                )}
+              <div className="w-24 h-24 rounded-full border-[3px] border-primary p-0.5">
+                <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-3xl font-bold text-muted-foreground overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    (profile?.username ?? "U").charAt(0).toUpperCase()
+                  )}
+                </div>
               </div>
-              <button onClick={() => fileRef.current?.click()} className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+              <button onClick={() => fileRef.current?.click()} className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
                 <Camera className="w-4 h-4 text-primary-foreground" />
               </button>
             </div>
+            <button onClick={() => fileRef.current?.click()} className="text-sm font-medium text-primary">Change Photo</button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
 
-          {/* Fields */}
-          {[
-            { label: "Display Name", key: "display_name", value: displayName, maxLen: 50 },
-            { label: "Username", key: "username", value: username, maxLen: 30 },
-            { label: "Bio", key: "bio", value: bio, maxLen: 150, multiline: true },
-            { label: "Website", key: "website", value: website, maxLen: 100 },
-          ].map((field) => (
-            <div key={field.key} className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-              {field.multiline ? (
-                <textarea
-                  value={field.value}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                  maxLength={field.maxLen}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                />
-              ) : (
-                <input
-                  value={field.value}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                  maxLength={field.maxLen}
-                  className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              )}
+          {/* Name */}
+          <FieldGroup label="NAME">
+            <input value={getValue("display_name")} onChange={(e) => setForm(p => ({ ...p, display_name: e.target.value }))} maxLength={50} className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground outline-none" />
+          </FieldGroup>
+
+          {/* Username */}
+          <FieldGroup label="USERNAME">
+            <input value={getValue("username")} onChange={(e) => setForm(p => ({ ...p, username: e.target.value }))} maxLength={30} className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground outline-none" />
+            <p className="text-[11px] text-muted-foreground mt-1">yehulu.app/@{getValue("username")}</p>
+          </FieldGroup>
+
+          {/* Bio */}
+          <FieldGroup label="BIO">
+            <textarea value={getValue("bio")} onChange={(e) => setForm(p => ({ ...p, bio: e.target.value }))} maxLength={150} rows={3} className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground outline-none resize-none" />
+          </FieldGroup>
+
+          {/* Gender */}
+          <FieldGroup label="GENDER">
+            <div className="flex gap-3">
+              {["Male", "Female"].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setForm(p => ({ ...p, gender: g }))}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
+                    gender === g
+                      ? "border-primary text-primary bg-primary/10"
+                      : "border-border text-muted-foreground bg-card"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
             </div>
-          ))}
+          </FieldGroup>
+
+          {/* Website */}
+          <FieldGroup label="WEBSITE">
+            <input value={getValue("website")} onChange={(e) => setForm(p => ({ ...p, website: e.target.value }))} placeholder="www.example.com" className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground placeholder:text-muted-foreground outline-none" />
+          </FieldGroup>
+
+          {/* Social Links */}
+          <FieldGroup label="SOCIAL LINKS">
+            <div className="space-y-0">
+              {[
+                { icon: "📷", placeholder: "instagram.com/username" },
+                { icon: "🎵", placeholder: "tiktok.com/@username" },
+                { icon: "📺", placeholder: "youtube.com/@channel" },
+                { icon: "📘", placeholder: "facebook.com/username" },
+                { icon: "✈️", placeholder: "t.me/username" },
+              ].map((link, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-3 border-b border-border last:border-b-0">
+                  <span className="text-base">{link.icon}</span>
+                  <span className="text-sm text-muted-foreground">{link.placeholder}</span>
+                </div>
+              ))}
+            </div>
+          </FieldGroup>
+
+          {/* Contact Phone */}
+          <FieldGroup label="CONTACT PHONE">
+            <input value={getValue("contact_phone")} onChange={(e) => setForm(p => ({ ...p, contact_phone: e.target.value }))} placeholder="+251 9XX XXX XXXX" className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground placeholder:text-muted-foreground outline-none" />
+          </FieldGroup>
+
+          {/* Links */}
+          <div className="flex items-center justify-between px-1 py-2">
+            <div className="flex items-center gap-2">
+              <LinkIcon className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Links</span>
+            </div>
+            <button className="flex items-center gap-1 text-sm text-muted-foreground">
+              Add <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Update Password */}
+          <FieldGroup label="UPDATE PASSWORD">
+            <input
+              type="password"
+              value={form.new_password ?? ""}
+              onChange={(e) => setForm(p => ({ ...p, new_password: e.target.value }))}
+              placeholder="New password"
+              className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground placeholder:text-muted-foreground outline-none mb-2"
+            />
+            <input
+              type="password"
+              value={form.confirm_password ?? ""}
+              onChange={(e) => setForm(p => ({ ...p, confirm_password: e.target.value }))}
+              placeholder="Confirm password"
+              className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <button onClick={handlePasswordUpdate} className="w-full mt-3 py-2.5 rounded-lg bg-primary/20 text-primary text-sm font-semibold">
+              Update Password
+            </button>
+          </FieldGroup>
+
+          {/* Business Info */}
+          <div>
+            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">BUSINESS INFO</p>
+            <div className="bg-card rounded-lg overflow-hidden">
+              <button className="flex items-center justify-between w-full px-3 py-3 border-b border-border">
+                <span className="text-sm text-foreground">Action buttons</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <button className="flex items-center justify-between w-full px-3 py-3 border-b border-border">
+                <span className="text-sm text-foreground">Leads</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-muted-foreground">{profile?.leads_enabled ? "On" : "Off"}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </button>
+              <button className="flex items-center justify-between w-full px-3 py-3">
+                <span className="text-sm text-foreground">Category</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-muted-foreground">{profile?.profession_category || "Select"}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Date of Birth */}
+          <FieldGroup label="DATE OF BIRTH">
+            <div className="relative">
+              <input
+                type="date"
+                value={getValue("birthday")}
+                onChange={(e) => setForm(p => ({ ...p, birthday: e.target.value }))}
+                className="w-full px-3 py-3 bg-card rounded-lg text-sm text-foreground outline-none appearance-none"
+              />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
+          </FieldGroup>
+
+          <div className="h-8" />
         </div>
       )}
     </div>
   );
 };
+
+const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
+    {children}
+  </div>
+);
 
 export default EditProfile;
