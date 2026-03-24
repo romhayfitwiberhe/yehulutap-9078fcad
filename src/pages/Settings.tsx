@@ -1,31 +1,24 @@
-import { useState } from "react";
-import { ArrowLeft, ChevronRight, Bell, Lock, Eye, Shield, LogOut, HelpCircle, Moon, User, Smartphone } from "lucide-react";
+import { ArrowLeft, ChevronRight, Wallet, User, Bell, Lock, BarChart3, QrCode, Shield, HelpCircle, Moon, LogOut, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState } from "react";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const [darkMode, setDarkMode] = useState(true);
 
-  const { data: prefs } = useQuery({
-    queryKey: ["user-preferences", user?.id],
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from("user_preferences").select("*").eq("user_id", user.id).single();
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
       return data;
     },
     enabled: !!user,
   });
-
-  const togglePref = async (key: string, value: boolean) => {
-    if (!user) return;
-    await supabase.from("user_preferences").update({ [key]: value }).eq("user_id", user.id);
-    queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -37,32 +30,16 @@ const Settings = () => {
     return null;
   }
 
-  const sections = [
-    {
-      title: "Account",
-      items: [
-        { icon: User, label: "Edit Profile", action: () => navigate("/edit-profile") },
-        { icon: Lock, label: "Private Account", toggle: true, key: "private_account", value: prefs?.private_account ?? false },
-      ],
-    },
-    {
-      title: "Privacy",
-      items: [
-        { icon: Eye, label: "Show Online Status", toggle: true, key: "show_online_status", value: prefs?.show_online_status ?? true },
-        { icon: Shield, label: "Allow Messages", toggle: true, key: "allow_messages", value: prefs?.allow_messages ?? true },
-        { icon: Shield, label: "Allow Comments", toggle: true, key: "allow_comments", value: prefs?.allow_comments ?? true },
-      ],
-    },
-    {
-      title: "Notifications",
-      items: [
-        { icon: Bell, label: "Likes", toggle: true, key: "notif_likes", value: prefs?.notif_likes ?? true },
-        { icon: Bell, label: "Comments", toggle: true, key: "notif_comments", value: prefs?.notif_comments ?? true },
-        { icon: Bell, label: "Follows", toggle: true, key: "notif_follows", value: prefs?.notif_follows ?? true },
-        { icon: Bell, label: "Messages", toggle: true, key: "notif_messages", value: prefs?.notif_messages ?? true },
-        { icon: Bell, label: "Gifts", toggle: true, key: "notif_gifts", value: prefs?.notif_gifts ?? true },
-      ],
-    },
+  const shortId = user.id.substring(0, 8).toUpperCase();
+
+  const menuItems = [
+    { icon: Wallet, label: "Balance & Wallet", route: "/settings/wallet" },
+    { icon: User, label: "Account", route: "/settings/account" },
+    { icon: Bell, label: "Privacy & Notifications", route: "/settings/privacy" },
+    { icon: BarChart3, label: "Analytics", route: "/settings/analytics" },
+    { icon: QrCode, label: "My QR Code", route: "/settings/qr-code" },
+    { icon: Shield, label: "Security", route: "/settings/security" },
+    { icon: HelpCircle, label: "Help Center", route: "/settings/help" },
   ];
 
   return (
@@ -74,44 +51,75 @@ const Settings = () => {
         <span className="text-base font-bold text-foreground">Settings</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
-        {sections.map((section) => (
-          <div key={section.title} className="mt-4">
-            <h3 className="px-4 pb-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{section.title}</h3>
-            <div className="border-t border-border">
-              {section.items.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (item.toggle && item.key) {
-                      togglePref(item.key, !item.value);
-                    } else if (item.action) {
-                      item.action();
-                    }
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-3 border-b border-border hover:bg-card/50 transition-colors"
-                >
-                  <item.icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="flex-1 text-sm text-foreground text-left">{item.label}</span>
-                  {item.toggle ? (
-                    <div className={`w-10 h-6 rounded-full transition-colors flex items-center ${item.value ? "bg-primary justify-end" : "bg-muted justify-start"}`}>
-                      <div className="w-5 h-5 bg-white rounded-full mx-0.5 shadow-sm" />
-                    </div>
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-              ))}
-            </div>
+      <div className="flex-1 overflow-y-auto pb-28">
+        {/* Profile card */}
+        <button
+          onClick={() => navigate("/edit-profile")}
+          className="flex items-center gap-3 w-full px-4 py-4 border-b border-border"
+        >
+          <div className="w-14 h-14 rounded-full bg-card flex items-center justify-center text-lg font-bold text-muted-foreground overflow-hidden">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              (profile?.username ?? "U").charAt(0).toUpperCase()
+            )}
           </div>
-        ))}
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-foreground">{profile?.display_name ?? "User"}</p>
+            <p className="text-xs text-muted-foreground">@{profile?.username ?? "user"}</p>
+            <p className="text-[10px] text-muted-foreground">ID: {shortId}</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </button>
 
-        <div className="mt-6 px-4 pb-8">
-          <button onClick={handleSignOut} className="flex items-center gap-3 w-full py-3 text-destructive">
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-semibold">Log Out</span>
+        {/* Menu items */}
+        <div className="mt-2 space-y-1 px-3">
+          {menuItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => navigate(item.route)}
+              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl bg-card hover:bg-card/80 transition-colors"
+            >
+              <item.icon className="w-5 h-5 text-muted-foreground" />
+              <span className="flex-1 text-sm text-foreground text-left">{item.label}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+
+        {/* Appearance */}
+        <div className="mt-6 px-3">
+          <h3 className="px-4 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</h3>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl bg-card"
+          >
+            <Moon className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground text-left">Dark Mode</span>
+            <div className={`w-11 h-6 rounded-full transition-colors flex items-center ${darkMode ? "bg-primary justify-end" : "bg-muted justify-start"}`}>
+              <div className="w-5 h-5 bg-white rounded-full mx-0.5 shadow-sm" />
+            </div>
           </button>
         </div>
+
+        {/* Bottom actions */}
+        <div className="mt-4 px-3 space-y-1">
+          <button className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl bg-card">
+            <RefreshCw className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground text-left">Switch Account</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button onClick={handleSignOut} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl bg-card">
+            <LogOut className="w-5 h-5 text-destructive" />
+            <span className="flex-1 text-sm text-destructive text-left font-medium">Log Out</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground mt-6 pb-4">
+          Yehulu Tap v2.0 • Made with ❤️
+        </p>
       </div>
     </div>
   );
