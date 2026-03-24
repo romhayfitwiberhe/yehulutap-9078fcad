@@ -83,7 +83,7 @@ const Profile = () => {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={handleSignOut}><LogOut className="w-5 h-5 text-muted-foreground" /></button>
-          <button><Settings className="w-5 h-5 text-foreground" /></button>
+          <button onClick={() => navigate("/settings")}><Settings className="w-5 h-5 text-foreground" /></button>
         </div>
       </header>
 
