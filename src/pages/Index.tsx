@@ -28,7 +28,7 @@ const Index = () => {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate("/explore")}><Search className="w-6 h-6 text-primary" /></button>
           {user ? (
-            <button className="relative">
+            <button onClick={() => navigate("/notifications")} className="relative">
               <Heart className="w-6 h-6 text-primary" />
             </button>
           ) : (

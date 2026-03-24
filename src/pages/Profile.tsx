@@ -117,7 +117,7 @@ const Profile = () => {
         </div>
 
         <div className="flex gap-2 mt-4">
-          <button className="flex-1 py-1.5 text-sm font-semibold text-foreground bg-card border border-border rounded-lg">
+          <button onClick={() => navigate("/edit-profile")} className="flex-1 py-1.5 text-sm font-semibold text-foreground bg-card border border-border rounded-lg">
             Edit Profile
           </button>
           <button className="flex-1 py-1.5 text-sm font-semibold text-foreground bg-card border border-border rounded-lg">
