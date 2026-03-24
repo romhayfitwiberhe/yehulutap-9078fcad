@@ -4,11 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import FollowersSheet from "@/components/FollowersSheet";
 
 const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"videos" | "saved" | "liked" | "private">("videos");
+  const [followSheet, setFollowSheet] = useState<{ open: boolean; tab: "followers" | "following" }>({ open: false, tab: "followers" });
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
@@ -128,15 +130,15 @@ const Profile = () => {
       {/* Stats */}
       <div className="mx-6 rounded-xl bg-card p-4 flex justify-between">
         {[
-          { count: profile?.following_count ?? 0, label: "Following" },
-          { count: profile?.followers_count ?? 0, label: "Followers" },
+          { count: profile?.following_count ?? 0, label: "Following", action: () => setFollowSheet({ open: true, tab: "following" }) },
+          { count: profile?.followers_count ?? 0, label: "Followers", action: () => setFollowSheet({ open: true, tab: "followers" }) },
           { count: profile?.likes_count ?? 0, label: "Likes" },
           { count: profile?.views_count ?? 0, label: "Views" },
         ].map((stat) => (
-          <div key={stat.label} className="flex flex-col items-center">
+          <button key={stat.label} onClick={stat.action} className="flex flex-col items-center">
             <span className="text-lg font-bold text-foreground">{stat.count}</span>
             <span className="text-[11px] text-muted-foreground">{stat.label}</span>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -198,6 +200,12 @@ const Profile = () => {
           </div>
         )}
       </div>
+      <FollowersSheet
+        userId={user.id}
+        initialTab={followSheet.tab}
+        open={followSheet.open}
+        onClose={() => setFollowSheet((s) => ({ ...s, open: false }))}
+      />
     </div>
   );
 };
