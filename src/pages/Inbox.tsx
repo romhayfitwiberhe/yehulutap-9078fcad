@@ -1,4 +1,4 @@
-import { Search, ArrowLeft, UserPlus } from "lucide-react";
+import { Search, ArrowLeft, UserPlus, MessageSquare, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -224,7 +224,17 @@ const Inbox = () => {
           </p>
         </div>
       ) : filteredConversations.length === 0 ? (
-        <p className="text-center text-muted-foreground text-sm py-12">No conversations yet</p>
+        <div className="flex flex-col items-center justify-center py-16 px-8">
+          <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center mb-4">
+            <MessageSquare className="w-10 h-10 text-primary" />
+          </div>
+          <p className="text-lg font-bold text-foreground mb-1">No messages yet</p>
+          <p className="text-sm text-muted-foreground text-center mb-5">Search for people to start a conversation</p>
+          <button onClick={() => setShowNewDM(true)} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm flex items-center gap-2">
+            <Send className="w-4 h-4" />
+            Start a conversation
+          </button>
+        </div>
       ) : (
         <div>
           {filteredConversations.map((chat) => (
