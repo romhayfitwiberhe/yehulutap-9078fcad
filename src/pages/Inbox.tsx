@@ -10,6 +10,7 @@ const Inbox = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showNewDM, setShowNewDM] = useState(false);
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["inbox-conversations", user?.id],
