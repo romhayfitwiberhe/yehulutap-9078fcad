@@ -105,7 +105,7 @@ const Inbox = () => {
     <div className="min-h-[100dvh] bg-background pb-28">
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-[52px] bg-background border-b border-border" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <h1 className="text-lg font-bold text-foreground">Messages</h1>
-        <button><Edit className="w-5 h-5 text-primary" /></button>
+        <button onClick={() => setShowNewDM(true)}><Edit className="w-5 h-5 text-primary" /></button>
       </header>
 
       <div className="px-4 py-2">
