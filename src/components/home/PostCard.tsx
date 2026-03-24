@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Globe } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Globe, Gift } from "lucide-react";
 import { useState } from "react";
 import { PostWithProfile } from "@/hooks/usePosts";
 import { useLikePost } from "@/hooks/useLikes";
@@ -67,6 +67,11 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
     }
   };
 
+  const handleGift = () => {
+    if (!user) return navigate("/login");
+    toast.info("Gift feature coming soon");
+  };
+
   const mediaUrl = post.media_urls?.[0] || post.thumbnail_url;
   const isVerified = post.profile?.verification_type && post.profile.verification_type !== "none";
 
@@ -95,6 +100,11 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                 </svg>
               )}
+              {user?.id !== post.user_id && (
+                <button className="ml-1 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold">
+                  Follow
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
@@ -106,6 +116,12 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
           <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
+
+      {post.caption && (
+        <div className="px-3 pb-2">
+          <p className="text-sm text-foreground">{post.caption}</p>
+        </div>
+      )}
 
       {mediaUrl && (
         <div className="w-full bg-card" style={{ maxHeight: "85vh" }}>
@@ -125,29 +141,21 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
           <button onClick={onCommentTap}>
             <MessageCircle className="w-6 h-6 text-foreground" />
           </button>
-          <button onClick={handleShare}>
+          <button onClick={handleShare} className="flex items-center gap-1">
             <Send className="w-6 h-6 text-foreground" />
+            {post.shares_count > 0 && <span className="text-xs text-muted-foreground">{post.shares_count}</span>}
           </button>
         </div>
-        <button onClick={handleSave}>
-          <Bookmark className={`w-6 h-6 ${saved ? "text-foreground fill-foreground" : "text-foreground"}`} />
+        <button onClick={handleGift} className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+          <Gift className="w-5 h-5 text-primary-foreground" />
         </button>
       </div>
 
-      <div className="px-3 pb-3 space-y-1">
-        <p className="text-sm font-semibold text-foreground">{likesCount.toLocaleString()} likes</p>
-        {post.caption && (
-          <p className="text-sm text-foreground">
-            <span className="font-semibold">{post.profile?.username ?? "user"}</span>{" "}
-            <span className="text-muted-foreground">{post.caption}</span>
-          </p>
-        )}
-        {post.comments_count > 0 && (
-          <button onClick={onCommentTap} className="text-sm text-muted-foreground">
-            View all {post.comments_count} comments
-          </button>
-        )}
-      </div>
+      {likesCount > 0 && (
+        <div className="px-3 pb-3">
+          <p className="text-sm font-semibold text-foreground">{likesCount.toLocaleString()} likes</p>
+        </div>
+      )}
     </article>
   );
 };
