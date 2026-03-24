@@ -3,6 +3,7 @@ import { useState } from "react";
 import { PostWithProfile } from "@/hooks/usePosts";
 import { useLikePost } from "@/hooks/useLikes";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -36,13 +37,49 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
     likePost.mutate({ postId: post.id, isLiked: liked });
   };
 
+  const handleSave = async () => {
+    if (!user) return navigate("/login");
+    const newSaved = !saved;
+    setSaved(newSaved);
+    try {
+      if (newSaved) {
+        await supabase.from("saved_posts").insert({ post_id: post.id, user_id: user.id });
+      } else {
+        await supabase.from("saved_posts").delete().eq("post_id", post.id).eq("user_id", user.id);
+      }
+    } catch {
+      setSaved(!newSaved);
+      toast.error("Action failed");
+    }
+  };
+
+  const handleShare = async () => {
+    const creator = post.profile?.display_name || post.profile?.username || "User";
+    const views = post.views_count ?? 0;
+    const text = `🎬 ${creator}\n👁 ${views} • ❤️ ${likesCount}\n\n▶️ Watch now on YehuluTap`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+    }
+  };
+
   const mediaUrl = post.media_urls?.[0] || post.thumbnail_url;
   const isVerified = post.profile?.verification_type && post.profile.verification_type !== "none";
 
   return (
     <article className="border-b border-border bg-background">
       <div className="flex items-center justify-between px-3 py-2.5">
-        <div className="flex items-center gap-2.5">
+        <button
+          onClick={() => {
+            if (post.user_id === user?.id) navigate("/profile");
+            else navigate(`/user/${post.user_id}`);
+          }}
+          className="flex items-center gap-2.5"
+        >
           <div className="w-9 h-9 rounded-full bg-card flex items-center justify-center text-muted-foreground font-semibold text-sm overflow-hidden">
             {post.profile?.avatar_url ? (
               <img src={post.profile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -64,7 +101,7 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
               <Globe className="w-2.5 h-2.5 text-muted-foreground" />
             </div>
           </div>
-        </div>
+        </button>
         <button className="p-1">
           <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -88,11 +125,11 @@ const PostCard = ({ post, isLiked, onCommentTap }: PostCardProps) => {
           <button onClick={onCommentTap}>
             <MessageCircle className="w-6 h-6 text-foreground" />
           </button>
-          <button>
+          <button onClick={handleShare}>
             <Send className="w-6 h-6 text-foreground" />
           </button>
         </div>
-        <button onClick={() => setSaved(!saved)}>
+        <button onClick={handleSave}>
           <Bookmark className={`w-6 h-6 ${saved ? "text-foreground fill-foreground" : "text-foreground"}`} />
         </button>
       </div>
