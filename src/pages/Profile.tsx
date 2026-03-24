@@ -207,6 +207,7 @@ const Profile = () => {
         onClose={() => setFollowSheet((s) => ({ ...s, open: false }))}
       />
     </div>
+  );
 };
 
 export default Profile;
