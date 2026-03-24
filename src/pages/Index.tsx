@@ -1,4 +1,4 @@
-import { Search, Heart } from "lucide-react";
+import { Search, Bell, PlusSquare } from "lucide-react";
 import StoriesBar from "@/components/home/StoriesBar";
 import PostCard from "@/components/home/PostCard";
 import CommentDrawer from "@/components/CommentDrawer";
@@ -24,12 +24,19 @@ const Index = () => {
   return (
     <div className="min-h-[100dvh] bg-background pb-28">
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-[52px] bg-background border-b border-border" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <h1 className="text-xl font-bold text-foreground tracking-tight">YehuluTap</h1>
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/explore")}><Search className="w-6 h-6 text-primary" /></button>
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-lg">Y</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/explore")}>
+            <Search className="w-6 h-6 text-foreground" />
+          </button>
+          <button onClick={() => navigate("/upload")}>
+            <PlusSquare className="w-6 h-6 text-foreground" />
+          </button>
           {user ? (
             <button onClick={() => navigate("/notifications")} className="relative">
-              <Heart className="w-6 h-6 text-primary" />
+              <Bell className="w-6 h-6 text-primary" />
             </button>
           ) : (
             <button onClick={() => navigate("/login")} className="text-sm font-semibold text-primary">
