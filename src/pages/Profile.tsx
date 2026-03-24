@@ -200,8 +200,13 @@ const Profile = () => {
           </div>
         )}
       </div>
+      <FollowersSheet
+        userId={user.id}
+        initialTab={followSheet.tab}
+        open={followSheet.open}
+        onClose={() => setFollowSheet((s) => ({ ...s, open: false }))}
+      />
     </div>
-  );
 };
 
 export default Profile;
