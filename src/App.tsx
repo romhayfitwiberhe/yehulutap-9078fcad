@@ -14,6 +14,13 @@ import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
+import WalletPage from "./pages/settings/WalletPage";
+import PrivacyPage from "./pages/settings/PrivacyPage";
+import AnalyticsPage from "./pages/settings/AnalyticsPage";
+import QRCodePage from "./pages/settings/QRCodePage";
+import SecurityPage from "./pages/settings/SecurityPage";
+import AccountPage from "./pages/settings/AccountPage";
+import HelpPage from "./pages/settings/HelpPage";
 import BottomNav from "./components/BottomNav";
 
 function App() {
@@ -34,6 +41,13 @@ function App() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/user/:userId" element={<UserProfile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/wallet" element={<WalletPage />} />
+        <Route path="/settings/privacy" element={<PrivacyPage />} />
+        <Route path="/settings/analytics" element={<AnalyticsPage />} />
+        <Route path="/settings/qr-code" element={<QRCodePage />} />
+        <Route path="/settings/security" element={<SecurityPage />} />
+        <Route path="/settings/account" element={<AccountPage />} />
+        <Route path="/settings/help" element={<HelpPage />} />
       </Routes>
       <BottomNav />
     </AuthProvider>
